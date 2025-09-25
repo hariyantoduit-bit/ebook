@@ -2,18 +2,19 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Ebook Flip – Laporan 2023</title>
+  <title>Ebook Flip – Demo 3 Halaman</title>
 
   <!-- jQuery dari CDN -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Turn.js lokal (harus ada di /js/turn.min.js) -->
+  <!-- Turn.js lokal -->
   <script src="js/turn.min.js"></script>
 
   <style>
     body {
       background: #ccc;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
@@ -31,11 +32,35 @@
       display: block;
     }
 
+    /* Navigasi */
+    .nav-buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 20px;
+    }
+    .nav-buttons button {
+      padding: 8px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #007BFF;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .nav-buttons button:hover {
+      background: #0056b3;
+    }
+
     /* Responsive untuk HP/tablet */
     @media (max-width: 768px) {
       .flipbook {
         width: 95vw !important;
         height: 70vh !important;
+      }
+      .nav-buttons button {
+        font-size: 14px;
+        padding: 6px 15px;
       }
     }
   </style>
@@ -43,22 +68,28 @@
 <body>
   <div class="flipbook" id="book"></div>
 
+  <!-- Tombol navigasi -->
+  <div class="nav-buttons">
+    <button id="prevBtn">⬅ Prev</button>
+    <button id="nextBtn">Next ➡</button>
+  </div>
+
   <script>
-    const totalPages = 3; // jumlah halaman sesuai gambar di /images/
+    const totalPages = 3; // jumlah halaman sesuai gambar
     const book = document.getElementById("book");
 
     // Tambahkan halaman otomatis
     for (let i = 1; i <= totalPages; i++) {
       const page = document.createElement("div");
       const img = document.createElement("img");
-      img.src = "images/page${i}.jpg"; 
+      img.src = `images/page${i}.jpg`; 
       page.appendChild(img);
       book.appendChild(page);
     }
 
     function initFlipbook() {
-      const w = Math.min(window.innerWidth * 0.9, 800); // max 800px
-      const h = Math.min(window.innerHeight * 0.8, 600); // max 600px
+      const w = Math.min(window.innerWidth * 0.9, 800); 
+      const h = Math.min(window.innerHeight * 0.8, 600); 
 
       $("#book").turn({
         width: w,
@@ -77,6 +108,14 @@
       const w = Math.min(window.innerWidth * 0.9, 800); 
       const h = Math.min(window.innerHeight * 0.8, 600); 
       $("#book").turn("size", w, h);
+    });
+
+    // Tombol navigasi
+    $("#prevBtn").on("click", function(){
+      $("#book").turn("previous");
+    });
+    $("#nextBtn").on("click", function(){
+      $("#book").turn("next");
     });
   </script>
 </body>
