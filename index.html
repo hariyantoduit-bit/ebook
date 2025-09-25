@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Majalah Digital</title>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/turn.min.js"></script>
+  <style>
+    body { background: #ccc; display: flex; justify-content: center; }
+    .flipbook {
+      width: 800px;   /* lebar total buku */
+      height: 600px;  /* tinggi buku */
+    }
+    .flipbook img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <div class="flipbook" id="book"></div>
+
+  <script>
+    // Jumlah halaman majalah (ubah sesuai kebutuhan)
+    const totalPages = 10; 
+
+    // Target flipbook
+    const book = document.getElementById("book");
+
+    // Tambahkan halaman otomatis
+    for (let i = 1; i <= totalPages; i++) {
+      const page = document.createElement("div");
+      const img = document.createElement("img");
+      img.src = `images/page${i}.jpg`; // nama file: page1.jpg, page2.jpg, dst.
+      page.appendChild(img);
+      book.appendChild(page);
+    }
+
+    // Aktifkan flipbook
+    $("#book").turn({
+      width: 800,
+      height: 600,
+      autoCenter: true
+    });
+  </script>
+</body>
+</html>
