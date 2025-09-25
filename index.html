@@ -2,93 +2,81 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Ebook Flip – Demo Lengkap</title>
+  <title>Ebook Interaktif - Flipbook</title>
 
-  <!-- jQuery dari CDN -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+  <!-- jQuery lokal -->
+  <script src="js/jquery.min.js"></script>
   <!-- Turn.js lokal -->
   <script src="js/turn.min.js"></script>
 
   <style>
-    body {
-      background: #ccc;
-      display: flex;
+    body { 
+      background: #f0f0f0; 
+      display: flex; 
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      align-items: center; 
       margin: 0;
+      font-family: Arial, sans-serif;
     }
+
+    h1 {
+      text-align: center;
+      margin: 15px 0;
+    }
+
     .flipbook {
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
       background: white;
-      margin: auto;
+      margin: 10px auto;
     }
     .flipbook img {
-      width: 100%;
-      height: 100%;
+      width: 100%; 
+      height: 100%; 
       object-fit: cover;
-      display: block;
     }
 
-    /* Kontrol navigasi */
-    .controls {
-      margin-top: 15px;
+    /* Tombol navigasi */
+    .nav-buttons {
+      margin: 15px 0;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       gap: 10px;
     }
-    .nav-buttons {
-      display: flex;
-      gap: 20px;
-    }
-    .nav-buttons button {
-      padding: 8px 20px;
+    button {
+      padding: 8px 15px;
       font-size: 16px;
       border: none;
-      border-radius: 6px;
-      background: #007BFF;
+      border-radius: 5px;
+      background: #007bff;
       color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+
+    /* Thumbnail navigator */
+    .thumbnails {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      max-width: 90vw;
+    }
+    .thumbnails img {
+      width: 60px;
+      height: 80px;
+      object-fit: cover;
+      border: 2px solid transparent;
       cursor: pointer;
       transition: 0.2s;
     }
-    .nav-buttons button:hover {
-      background: #0056b3;
+    .thumbnails img:hover {
+      border: 2px solid #007bff;
     }
-    .page-indicator {
-      font-size: 15px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    /* Lompat halaman */
-    .goto-page {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 5px;
-    }
-    .goto-page input {
-      width: 50px;
-      padding: 5px;
-      font-size: 14px;
-      text-align: center;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-    }
-    .goto-page button {
-      padding: 5px 12px;
-      font-size: 14px;
-      border: none;
-      border-radius: 4px;
-      background: #28a745;
-      color: white;
-      cursor: pointer;
-    }
-    .goto-page button:hover {
-      background: #1e7e34;
+    .thumbnails img.active {
+      border: 2px solid red;
     }
 
     /* Responsive untuk HP */
@@ -97,110 +85,97 @@
         width: 95vw !important;
         height: 70vh !important;
       }
-      .nav-buttons button {
-        font-size: 14px;
-        padding: 6px 15px;
-      }
-      .page-indicator {
-        font-size: 13px;
-      }
-      .goto-page input {
+      .thumbnails img {
         width: 40px;
+        height: 55px;
       }
     }
   </style>
 </head>
 <body>
+  <h1>📖 Ebook Interaktif</h1>
+
+  <!-- Flipbook -->
   <div class="flipbook" id="book"></div>
 
-  <!-- Kontrol navigasi -->
-  <div class="controls">
-    <div class="nav-buttons">
-      <button id="prevBtn">⬅ Prev</button>
-      <button id="nextBtn">Next ➡</button>
-    </div>
-    <div class="page-indicator" id="pageIndicator">Halaman 1 dari 3</div>
-
-    <!-- Input lompat halaman -->
-    <div class="goto-page">
-      <label for="pageInput">Ke halaman:</label>
-      <input type="number" id="pageInput" min="1" max="3">
-      <button id="goBtn">Go</button>
-    </div>
+  <!-- Tombol navigasi -->
+  <div class="nav-buttons">
+    <button id="prev">⬅️ Prev</button>
+    <button id="next">Next ➡️</button>
   </div>
 
+  <!-- Thumbnail navigator -->
+  <div class="thumbnails" id="thumbs"></div>
+
   <script>
-    const totalPages = 3; // jumlah halaman
+    const totalPages = 5; // ganti sesuai jumlah halaman kamu
     const book = document.getElementById("book");
+    const thumbs = document.getElementById("thumbs");
 
     // Tambahkan halaman otomatis
     for (let i = 1; i <= totalPages; i++) {
+      // flipbook page
       const page = document.createElement("div");
       const img = document.createElement("img");
       img.src = `images/page${i}.jpg`; 
       page.appendChild(img);
       book.appendChild(page);
+
+      // thumbnail
+      const thumb = document.createElement("img");
+      thumb.src = `images/page${i}.jpg`;
+      thumb.dataset.page = i;
+      thumbs.appendChild(thumb);
+
+      thumb.addEventListener("click", () => {
+        $("#book").turn("page", i);
+      });
     }
 
     function initFlipbook() {
-      const w = Math.min(window.innerWidth * 0.9, 800); 
-      const h = Math.min(window.innerHeight * 0.8, 600); 
+      const w = Math.min(window.innerWidth * 0.9, 800); // max 800px
+      const h = Math.min(window.innerHeight * 0.8, 600); // max 600px
 
       $("#book").turn({
         width: w,
         height: h,
         autoCenter: true,
-        gradients: true,
-        acceleration: true
+        when: {
+          turned: function(event, page) {
+            // highlight thumbnail aktif
+            document.querySelectorAll(".thumbnails img").forEach(t => t.classList.remove("active"));
+            const activeThumb = document.querySelector(`.thumbnails img[data-page='${page}']`);
+            if (activeThumb) activeThumb.classList.add("active");
+          }
+        }
       });
-
-      // Update indikator saat halaman berubah
-      $("#book").bind("turned", function(event, page, view){
-        updatePageIndicator(page);
-      });
-
-      updatePageIndicator(1);
     }
 
-    // Update indikator
-    function updatePageIndicator(currentPage) {
-      document.getElementById("pageIndicator").textContent =
-        `Halaman ${currentPage} dari ${totalPages}`;
-    }
-
-    // Inisialisasi
-    initFlipbook();
-
-    // Resize → ubah ukuran tanpa reset halaman
-    $(window).on("resize", function(){
-      const w = Math.min(window.innerWidth * 0.9, 800); 
-      const h = Math.min(window.innerHeight * 0.8, 600); 
-      $("#book").turn("size", w, h);
-    });
-
-    // Tombol navigasi
-    $("#prevBtn").on("click", function(){
+    // tombol navigasi
+    document.getElementById("prev").addEventListener("click", () => {
       $("#book").turn("previous");
     });
-    $("#nextBtn").on("click", function(){
+    document.getElementById("next").addEventListener("click", () => {
       $("#book").turn("next");
     });
 
-    // Tombol "Go" lompat halaman
-    $("#goBtn").on("click", function(){
-      const pageNum = parseInt($("#pageInput").val());
-      if (pageNum >= 1 && pageNum <= totalPages) {
-        $("#book").turn("page", pageNum);
-      } else {
-        alert("Halaman tidak valid!");
-      }
-    });
+    // init flipbook
+    initFlipbook();
 
-    // Enter di input juga jalan
-    $("#pageInput").on("keypress", function(e){
-      if (e.key === "Enter") {
-        $("#goBtn").click();
+    // resize responsif
+    $(window).on("resize", function(){
+      $("#book").turn("destroy").remove(); 
+      const newBook = $("<div/>", {id: "book", class: "flipbook"});
+      $(".nav-buttons").before(newBook);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const page = $("<div/>");
+        const img = $("<img/>", {src: `images/page${i}.jpg`});
+        page.append(img);
+        newBook.append(page);
       }
+
+      initFlipbook();
     });
   </script>
 </body>
