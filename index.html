@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>Ebook Interaktif - Flipbook</title>
 
-  <!-- jQuery lokal -->
+  <!-- jQuery -->
   <script src="js/jquery.min.js"></script>
-  <!-- Turn.js lokal -->
+  <!-- Turn.js -->
   <script src="js/turn.min.js"></script>
 
   <style>
@@ -19,21 +19,28 @@
       font-family: Arial, sans-serif;
     }
 
-    h1 { text-align: center; margin: 15px 0; }
+    h1 { margin: 15px 0; }
 
     .flipbook {
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
       background: white;
       margin: 10px auto;
     }
-    .flipbook img { width: 100%; height: 100%; object-fit: cover; }
-    .flipbook .page { cursor: grab; }
-    .flipbook .page:active { cursor: grabbing; }
+    .flipbook img {
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover;
+    }
 
-    .nav-buttons { margin: 15px 0; display: flex; gap: 10px; }
+    /* Tombol navigasi */
+    .nav-buttons {
+      margin: 15px 0;
+      display: flex;
+      gap: 10px;
+    }
     button {
-      padding: 8px 15px;
-      font-size: 16px;
+      padding: 6px 12px;
+      font-size: 14px;
       border: none;
       border-radius: 5px;
       background: #007bff;
@@ -43,20 +50,38 @@
     }
     button:hover { background: #0056b3; }
 
-    .thumbnails {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 8px; margin-bottom: 20px; max-width: 90vw;
+    /* Pagination */
+    .pagination {
+      margin: 10px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
     }
-    .thumbnails img {
-      width: 60px; height: 80px; object-fit: cover;
-      border: 2px solid transparent; cursor: pointer; transition: 0.2s;
+    .pagination button {
+      padding: 5px 8px;
+      border: 1px solid #007bff;
+      background: white;
+      color: #007bff;
     }
-    .thumbnails img:hover { border: 2px solid #007bff; }
-    .thumbnails img.active { border: 2px solid red; }
+    .pagination button.active {
+      background: #007bff;
+      color: white;
+    }
 
+    /* Go to page */
+    .goto {
+      margin: 10px 0 20px;
+      text-align: center;
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 5px;
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
       .flipbook { width: 95vw !important; height: 70vh !important; }
-      .thumbnails img { width: 40px; height: 55px; }
     }
   </style>
 </head>
@@ -72,60 +97,46 @@
     <button id="next">Next ➡️</button>
   </div>
 
-  <!-- Thumbnail navigator -->
-  <div class="thumbnails" id="thumbs"></div>
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
 
-  <!-- Audio -->
-  <audio id="flip-sound" src="sounds/flip.mp3" preload="auto"></audio>
+  <!-- Go to page -->
+  <div class="goto">
+    <label for="gotoPage">Go to page: </label>
+    <input type="number" id="gotoPage" min="1">
+    <button id="gotoBtn">Go</button>
+  </div>
 
   <script>
-    const totalPages = 80; // ganti sesuai jumlah halaman kamu
+    const totalPages = 100; // jumlah halaman
     const book = document.getElementById("book");
-    const thumbs = document.getElementById("thumbs");
-    const flipSound = document.getElementById("flip-sound");
 
     // Tambahkan halaman otomatis
     for (let i = 1; i <= totalPages; i++) {
       const page = document.createElement("div");
-      page.classList.add("page");
       const img = document.createElement("img");
       img.src = `images/page${i}.jpg`; 
       page.appendChild(img);
       book.appendChild(page);
-
-      const thumb = document.createElement("img");
-      thumb.src = `images/page${i}.jpg`;
-      thumb.dataset.page = i;
-      thumbs.appendChild(thumb);
-
-      thumb.addEventListener("click", () => {
-        $("#book").turn("page", i);
-      });
     }
 
+    // init flipbook
     function initFlipbook() {
       const w = Math.min(window.innerWidth * 0.9, 800);
       const h = Math.min(window.innerHeight * 0.8, 600);
-
       $("#book").turn({
         width: w,
         height: h,
         autoCenter: true,
         when: {
           turned: function(event, page) {
-            // highlight thumbnail
-            document.querySelectorAll(".thumbnails img").forEach(t => t.classList.remove("active"));
-            const activeThumb = document.querySelector(`.thumbnails img[data-page='${page}']`);
-            if (activeThumb) activeThumb.classList.add("active");
-
-            // mainkan suara flip
-            flipSound.currentTime = 0;
-            flipSound.play();
+            highlightPage(page);
           }
         }
       });
     }
 
+    // tombol navigasi
     document.getElementById("prev").addEventListener("click", () => {
       $("#book").turn("previous");
     });
@@ -133,21 +144,89 @@
       $("#book").turn("next");
     });
 
-    initFlipbook();
+    // ================== Pagination ==================
+    const pagination = document.getElementById("pagination");
+    let currentBlock = 1;
+    const perBlock = 10;
 
+    function createPagination(block = 1) {
+      pagination.innerHTML = "";
+      let start = (block - 1) * perBlock + 1;
+      let end = Math.min(start + perBlock - 1, totalPages);
+
+      if (block > 1) {
+        const prevBlock = document.createElement("button");
+        prevBlock.textContent = "«";
+        prevBlock.addEventListener("click", () => {
+          currentBlock--;
+          createPagination(currentBlock);
+        });
+        pagination.appendChild(prevBlock);
+      }
+
+      for (let i = start; i <= end; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.addEventListener("click", () => {
+          $("#book").turn("page", i);
+        });
+        pagination.appendChild(btn);
+      }
+
+      if (end < totalPages) {
+        const nextBlock = document.createElement("button");
+        nextBlock.textContent = "»";
+        nextBlock.addEventListener("click", () => {
+          currentBlock++;
+          createPagination(currentBlock);
+        });
+        pagination.appendChild(nextBlock);
+      }
+
+      highlightPage($("#book").turn("page"));
+    }
+
+    function highlightPage(page) {
+      document.querySelectorAll(".pagination button").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.textContent == page) {
+          btn.classList.add("active");
+        }
+      });
+    }
+
+    // ================== Go to page ==================
+    document.getElementById("gotoBtn").addEventListener("click", () => {
+      const p = parseInt(document.getElementById("gotoPage").value);
+      if (p >= 1 && p <= totalPages) {
+        $("#book").turn("page", p);
+        const newBlock = Math.ceil(p / perBlock);
+        if (newBlock !== currentBlock) {
+          currentBlock = newBlock;
+          createPagination(currentBlock);
+        }
+      }
+    });
+
+    // init all
+    initFlipbook();
+    createPagination();
+
+    // resize responsif
     $(window).on("resize", function(){
       $("#book").turn("destroy").remove(); 
       const newBook = $("<div/>", {id: "book", class: "flipbook"});
       $(".nav-buttons").before(newBook);
 
       for (let i = 1; i <= totalPages; i++) {
-        const page = $("<div/>", {class: "page"});
+        const page = $("<div/>");
         const img = $("<img/>", {src: `images/page${i}.jpg`});
         page.append(img);
         newBook.append(page);
       }
 
       initFlipbook();
+      createPagination(currentBlock);
     });
   </script>
 </body>
