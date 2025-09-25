@@ -15,7 +15,14 @@
       font-family: Arial, sans-serif;
     }
     h1 { text-align: center; margin: 15px 0; }
-    .flipbook { box-shadow: 0 4px 15px rgba(0,0,0,0.3); background: white; margin: 10px auto; }
+
+    .flipbook { 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+      background: white; 
+      margin: 10px auto; 
+      position: relative;
+      overflow: hidden;
+    }
     .flipbook img { width: 100%; height: 100%; object-fit: cover; }
     .flipbook .page { cursor: grab; }
     .flipbook .page:active { cursor: grabbing; }
@@ -31,14 +38,27 @@
     .goto { margin-bottom: 20px; text-align: center; }
     input[type="number"] { width: 60px; padding: 4px; }
 
-    .thumbnails { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; max-width: 90vw; }
-    .thumbnails img { width: 50px; height: 70px; object-fit: cover; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-    .thumbnails img:hover { border: 2px solid #007bff; }
-    .thumbnails img.active { border: 2px solid red; }
+    /* Magnifier */
+    .magnifier {
+      position: absolute;
+      border: 3px solid #007bff;
+      border-radius: 50%;
+      cursor: none;
+      display: none;
+      pointer-events: none;
+      overflow: hidden;
+      width: 150px;
+      height: 150px;
+      z-index: 10;
+    }
+    .magnifier img {
+      position: absolute;
+      transform: scale(2);
+      transform-origin: top left;
+    }
 
     @media (max-width: 768px) {
       .flipbook { width: 95vw !important; height: 70vh !important; }
-      .thumbnails img { width: 35px; height: 50px; }
     }
   </style>
 </head>
@@ -60,54 +80,63 @@
     <button id="gotoBtn">Go</button>
   </div>
 
-  <div class="thumbnails" id="thumbs"></div>
+  <!-- Magnifier -->
+  <div class="magnifier" id="magnifier"><img id="magnifier-img" src=""></div>
 
+  <!-- Audio flip -->
   <audio id="flip-sound" src="sounds/flip.mp3" preload="auto"></audio>
 
   <script>
-    const totalPages = 173;
-    const book = document.getElementById("book");
-    const thumbs = document.getElementById("thumbs");
-    const flipSound = document.getElementById("flip-sound");
-    const pagination = document.getElementById("pagination");
-    const perBlock = 10; 
+    const totalPages = 80;
+    const perBlock = 10;
     let currentBlock = 1;
 
-    // Tambah halaman & thumbnail
-    for (let i=1;i<=totalPages;i++){
+    const book = document.getElementById("book");
+    const flipSound = document.getElementById("flip-sound");
+    const pagination = document.getElementById("pagination");
+    const magnifier = document.getElementById("magnifier");
+    const magnifierImg = document.getElementById("magnifier-img");
+
+    // Tambah halaman
+    for(let i=1;i<=totalPages;i++){
       const page = document.createElement("div");
       page.classList.add("page");
       const img = document.createElement("img");
       img.src = `images/page${i}.jpg`;
       page.appendChild(img);
       book.appendChild(page);
-
-      const thumb = document.createElement("img");
-      thumb.src = `images/page${i}.jpg`;
-      thumb.dataset.page = i;
-      thumbs.appendChild(thumb);
-      thumb.addEventListener("click",()=>$("#book").turn("page",i));
     }
 
     function initFlipbook(){
-      const w=Math.min(window.innerWidth*0.9,800);
-      const h=Math.min(window.innerHeight*0.8,600);
+      const w = Math.min(window.innerWidth*0.9,800);
+      const h = Math.min(window.innerHeight*0.8,600);
       $("#book").turn({
         width: w, height: h, autoCenter:true,
         when:{turned:function(e,page){
-          document.querySelectorAll(".thumbnails img").forEach(t=>t.classList.remove("active"));
-          const activeThumb=document.querySelector(`.thumbnails img[data-page='${page}']`);
-          if(activeThumb) activeThumb.classList.add("active");
           flipSound.currentTime=0; flipSound.play();
           highlightPage(page);
         }}
       });
+
+      // Magnifier
+      $(".flipbook .page img").on("mousemove", function(e){
+        magnifier.style.display = "block";
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        magnifier.style.left = e.pageX - magnifier.offsetWidth/2 + "px";
+        magnifier.style.top = e.pageY - magnifier.offsetHeight/2 + "px";
+
+        magnifierImg.src = this.src;
+        magnifierImg.style.left = -x*2 + magnifier.offsetWidth/2 + "px";
+        magnifierImg.style.top = -y*2 + magnifier.offsetHeight/2 + "px";
+      }).on("mouseleave",function(){
+        magnifier.style.display="none";
+      });
     }
 
-    document.getElementById("prev").addEventListener("click",()=>$("#book").turn("previous"));
-    document.getElementById("next").addEventListener("click",()=>$("#book").turn("next"));
-
-    // pagination
+    // Pagination
     function createPagination(block=1){
       pagination.innerHTML="";
       let start=(block-1)*perBlock+1;
@@ -135,11 +164,12 @@
 
     function highlightPage(page){
       document.querySelectorAll(".pagination button").forEach(btn=>btn.classList.remove("active"));
-      const btn=document.querySelector(`.pagination button:nth-child(${(page-1)%perBlock + 1})`);
+      const btn = document.querySelector(`.pagination button:nth-child(${(page-1)%perBlock + 1})`);
       if(btn) btn.classList.add("active");
     }
 
-    // Go to page
+    document.getElementById("prev").addEventListener("click",()=>$("#book").turn("previous"));
+    document.getElementById("next").addEventListener("click",()=>$("#book").turn("next"));
     document.getElementById("gotoBtn").addEventListener("click",()=>{
       const p=parseInt(document.getElementById("gotoPage").value);
       if(p>=1 && p<=totalPages){
@@ -153,13 +183,13 @@
     initFlipbook();
     createPagination();
 
-    $(window).on("resize",function(){
-      $("#book").turn("destroy").remove(); 
-      const newBook=$("<div/>",{id:"book",class:"flipbook"});
+    $(window).on("resize", function(){
+      $("#book").turn("destroy").remove();
+      const newBook = $("<div/>",{id:"book", class:"flipbook"});
       $(".nav-buttons").before(newBook);
       for(let i=1;i<=totalPages;i++){
-        const page=$("<div/>",{class:"page"});
-        const img=$("<img/>",{src:`images/page${i}.jpg`});
+        const page = $("<div/>",{class:"page"});
+        const img = $("<img/>",{src:`images/page${i}.jpg`});
         page.append(img); newBook.append(page);
       }
       initFlipbook(); createPagination(currentBlock);
