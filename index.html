@@ -35,6 +35,14 @@
       object-fit: cover;
     }
 
+    /* supaya drag interaktif terasa */
+    .flipbook .page {
+      cursor: grab;
+    }
+    .flipbook .page:active {
+      cursor: grabbing;
+    }
+
     /* Tombol navigasi */
     .nav-buttons {
       margin: 15px 0;
@@ -116,6 +124,7 @@
     for (let i = 1; i <= totalPages; i++) {
       // flipbook page
       const page = document.createElement("div");
+      page.classList.add("page"); // ✅ wajib agar bisa di-drag
       const img = document.createElement("img");
       img.src = `images/page${i}.jpg`; 
       page.appendChild(img);
@@ -169,7 +178,7 @@
       $(".nav-buttons").before(newBook);
 
       for (let i = 1; i <= totalPages; i++) {
-        const page = $("<div/>");
+        const page = $("<div/>", {class: "page"}); // ✅ class page tetap ada
         const img = $("<img/>", {src: `images/page${i}.jpg`});
         page.append(img);
         newBook.append(page);
