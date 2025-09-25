@@ -2,20 +2,20 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Laporan Rekonsiliasi Barang Milik Daerah Tahun 2023 (Audited)</title>
-  
-  <!-- jQuery via CDN -->
+  <title>Ebook Flip – Laporan 2023</title>
+
+  <!-- jQuery dari CDN -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  
-  <!-- Turn.js dari repo -->
+
+  <!-- Turn.js lokal (harus ada di /js/turn.min.js) -->
   <script src="js/turn.min.js"></script>
-  
+
   <style>
-    body { 
-      background: #ccc; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
+    body {
+      background: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       min-height: 100vh;
       margin: 0;
     }
@@ -25,12 +25,13 @@
       margin: auto;
     }
     .flipbook img {
-      width: 100%; 
-      height: 100%; 
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      display: block;
     }
 
-    /* Agar flipbook tidak lebih kecil dari HP */
+    /* Responsive untuk HP/tablet */
     @media (max-width: 768px) {
       .flipbook {
         width: 95vw !important;
@@ -43,7 +44,7 @@
   <div class="flipbook" id="book"></div>
 
   <script>
-    const totalPages = 10; // jumlah halaman sesuai gambar
+    const totalPages = 10; // jumlah halaman sesuai gambar di /images/
     const book = document.getElementById("book");
 
     // Tambahkan halaman otomatis
@@ -62,27 +63,21 @@
       $("#book").turn({
         width: w,
         height: h,
-        autoCenter: true
+        autoCenter: true,
+        gradients: true,
+        acceleration: true
       });
     }
 
-    $(window).on("resize", function(){
-      $("#book").turn("destroy").remove(); // hapus dulu
-      const newBook = $("<div/>", {id: "book", class: "flipbook"});
-      $("body").append(newBook);
-
-      // isi ulang halaman
-      for (let i = 1; i <= totalPages; i++) {
-        const page = $("<div/>");
-        const img = $("<img/>", {src: `images/page${i}.jpg`});
-        page.append(img);
-        newBook.append(page);
-      }
-
-      initFlipbook();
-    });
-
+    // Inisialisasi
     initFlipbook();
+
+    // Resize → ubah ukuran tanpa reset halaman
+    $(window).on("resize", function(){
+      const w = Math.min(window.innerWidth * 0.9, 800); 
+      const h = Math.min(window.innerHeight * 0.8, 600); 
+      $("#book").turn("size", w, h);
+    });
   </script>
 </body>
 </html>
