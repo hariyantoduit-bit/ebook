@@ -3,16 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>Laporan Rekonsiliasi Barang Milik Daerah Tahun 2023 (Audited)</title>
-  <script src="js/jquery.min.js"></script>
+  
+  <!-- jQuery via CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- Turn.js dari repo -->
   <script src="js/turn.min.js"></script>
+  
   <style>
-    body { background: #ccc; display: flex; justify-content: center; }
+    body { 
+      background: #ccc; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh;
+      margin: 0;
+    }
     .flipbook {
-      width: 800px;   /* lebar total buku */
-      height: 600px;  /* tinggi buku */
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      background: white;
+      margin: auto;
     }
     .flipbook img {
-      width: 100%; height: 100%; object-fit: cover;
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover;
+    }
+
+    /* Agar flipbook tidak lebih kecil dari HP */
+    @media (max-width: 768px) {
+      .flipbook {
+        width: 95vw !important;
+        height: 70vh !important;
+      }
     }
   </style>
 </head>
@@ -20,27 +43,46 @@
   <div class="flipbook" id="book"></div>
 
   <script>
-    // Jumlah halaman majalah (ubah sesuai kebutuhan)
-    const totalPages = 10; 
-
-    // Target flipbook
+    const totalPages = 10; // jumlah halaman sesuai gambar
     const book = document.getElementById("book");
 
     // Tambahkan halaman otomatis
     for (let i = 1; i <= totalPages; i++) {
       const page = document.createElement("div");
       const img = document.createElement("img");
-      img.src = `images/page${i}.jpg`; // nama file: page1.jpg, page2.jpg, dst.
+      img.src = `images/page${i}.jpg`; 
       page.appendChild(img);
       book.appendChild(page);
     }
 
-    // Aktifkan flipbook
-    $("#book").turn({
-      width: 800,
-      height: 600,
-      autoCenter: true
+    function initFlipbook() {
+      const w = Math.min(window.innerWidth * 0.9, 800); // max 800px
+      const h = Math.min(window.innerHeight * 0.8, 600); // max 600px
+
+      $("#book").turn({
+        width: w,
+        height: h,
+        autoCenter: true
+      });
+    }
+
+    $(window).on("resize", function(){
+      $("#book").turn("destroy").remove(); // hapus dulu
+      const newBook = $("<div/>", {id: "book", class: "flipbook"});
+      $("body").append(newBook);
+
+      // isi ulang halaman
+      for (let i = 1; i <= totalPages; i++) {
+        const page = $("<div/>");
+        const img = $("<img/>", {src: `images/page${i}.jpg`});
+        page.append(img);
+        newBook.append(page);
+      }
+
+      initFlipbook();
     });
+
+    initFlipbook();
   </script>
 </body>
 </html>
